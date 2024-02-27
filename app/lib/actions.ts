@@ -24,6 +24,9 @@ const UpdateInvoice = CreateInvoiceSchema.omit({ id: true, date: true });
 
 
 export default async function createInvoice(formData:FormData) {
+  try {
+    
+
     
     const {customerId, amount, status} = CreateInoviceFormSchema.parse({
         customerId: formData.get('customerId'),
@@ -32,20 +35,23 @@ export default async function createInvoice(formData:FormData) {
     })
     const amountInCents = amount * 100
     const [date] = new Date().toISOString().split('T')
-    console.log( 'Date:', date)
-    console.log( 'Amount:', amount)
-    console.log('customerId:', customerId)
-    console.log('status: ', status)
     sql` INSERT INTO invoices (customer_id, amount, status, date)
     VALUES (${customerId},${amountInCents}, ${status}, ${date} )
     `
 
     revalidatePath('/dashboard/invoices')
     redirect('/dashboard/invoices')
+  } catch (error) {
+   console.log('Error on create invoice') 
+   return {message : 'Error on create invoice'}
+  }
 }
 
 
 export async function updateInvoice(id: string, formData: FormData) {
+    try {
+      
+    
     const { customerId, amount, status } = UpdateInvoice.parse({
       customerId: formData.get('customerId'),
       amount: formData.get('amount'),
@@ -62,4 +68,26 @@ export async function updateInvoice(id: string, formData: FormData) {
    
     revalidatePath('/dashboard/invoices');
     redirect('/dashboard/invoices');
+  } catch (error) {
+      console.log('Error on update inovice')
+      return {
+        message: 'Error on update inovice'
+      }
+  }
+  }
+
+  export async function deleteInvoice(id: string) {
+    throw new Error('Algo malo pasó')
+    
+    try {
+      await sql`DELETE FROM invoices WHERE id = ${id}`;
+      revalidatePath('/dashboard/invoices');
+      return {message: `Invoice Deleted : ${id}`}
+    } catch (error) {
+      console.log('Error on delete invoice')
+      return {
+        message: 'Error on delete invoice'
+      }
+    }
+    
   }
